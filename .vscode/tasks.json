@@ -3,7 +3,7 @@
     "tasks": [
       {
         "label": "Run",
-        "command": "C:\\Program Files\\processing-3.5.4-windows64\\processing-3.5.4\\processing-java.exe",
+        "command": "/usr/local/bin/processing-java",
         "type": "process",
         "args": [
           "--force",

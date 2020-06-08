@@ -4,7 +4,7 @@ import processing.video.*;
 final boolean MARKER_TRACKER_DEBUG = false;
 final boolean BALL_DEBUG = false;
 
-final boolean USE_SAMPLE_IMAGE = false;
+final boolean USE_SAMPLE_IMAGE = true;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
 // cannot work with processing.video.Capture.*.
@@ -175,7 +175,8 @@ void draw() {
       rotateZ(angle);
 
       // draw snowman
-      drawSnowman(snowmanSize);
+      drawMole(snowmanSize,0);
+      drawHole(snowmanSize);
 
       // move ball
       if (towardsList[i] == towards) {

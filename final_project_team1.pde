@@ -5,12 +5,12 @@ import java.util.ArrayList;
 final boolean MARKER_TRACKER_DEBUG = false;
 final boolean BALL_DEBUG = false;
 
-final boolean USE_SAMPLE_IMAGE = false;
+final boolean USE_SAMPLE_IMAGE = true;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
 // cannot work with processing.video.Capture.*.
 // Instead we use DirectShow Library to launch these cameras.
-final boolean USE_DIRECTSHOW = true;
+final boolean USE_DIRECTSHOW = false;
 
 
 // final double kMarkerSize = 0.036; // [m]
@@ -71,9 +71,18 @@ void selectCamera() {
     //cap = new Capture(this, cameras[5]);
 
     // Or, the settings can be defined based on the text in the list
-    cap = new Capture(this, 1280, 720, "USB2.0 HD UVC WebCam", 30);
+    // cap = new Capture(this, 1280, 720, "USB2.0 HD UVC WebCam", 30);
+    cap = new Capture(this, 1280, 720, 10);
   }
 }
+
+void setupCamera() {
+  if (!USE_SAMPLE_IMAGE) {
+    selectCamera();
+    opencv = new OpenCV(this, cap.width, cap.height);
+  }
+}
+
 
 void settings() {
   if (USE_SAMPLE_IMAGE) {
@@ -102,8 +111,15 @@ void setup() {
 
   markerTracker = new MarkerTracker(kMarkerSize);
 
-  if (!USE_DIRECTSHOW)
+  // if (!USE_DIRECTSHOW){
+  //   cap.start();
+  // }
+  if (!USE_DIRECTSHOW && !USE_SAMPLE_IMAGE) {
+    setupCamera();
     cap.start();
+  }
+
+  img = createImage(opencv.width, opencv.height, RGB);
 
   // Align the camera coordinate system with the world coordinate system
   // (cf. drawSnowman.pde)

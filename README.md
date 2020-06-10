@@ -74,8 +74,8 @@ Hitting mole mechanics, Is it
 
 (Chawit) Wed 10/6 → (Fariz) Sat 13/6→ (Chen) 15/6→  integration
 
-(Akira) Wed 10/6 → (Kaneko) → integration
-(Fariz) Sat 13/6    ↗ 
+(Akira) Wed 10/6 → (Kaneko) → integration \
+(Fariz) Sat 13/6 ↗ 
 
 Presentation 
 

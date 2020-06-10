@@ -1,4 +1,4 @@
-Whack-A-Mole
+# Whack-A-Mole
 
 ## Background Story
 The character is a farmer who is devastated by mole pestilence in their farm. Now the farmer wants to start a new seed to plant a new plant in the garden, but first the farmer should remove all the moles to guarantee success of the crops this season !!!

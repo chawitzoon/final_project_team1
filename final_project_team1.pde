@@ -229,7 +229,7 @@ void draw() {
     }
 
     // The snowmen face each other
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < ExistenceList.length; i++) {
       PMatrix3D pose_this = markerPoseMap.get(ExistenceList[i]);
       PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(i+1)%2]);
 

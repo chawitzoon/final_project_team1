@@ -57,6 +57,11 @@ PImage img;
 
 KeyState keyState;
 
+int moleKeyDebug = -1;
+boolean moleHitDebug = false;
+
+float globalRotateAngle = 0;
+
 
 // Circle button setup to start the game
 // from https://processing.org/examples/button.html
@@ -145,7 +150,7 @@ void setup() {
 
   img = createImage(opencv.width, opencv.height, RGB);
 
-  picker = new Picker(this);
+  // picker = new Picker(this);
 
   // draw circle button as start button
   setupButton();
@@ -203,7 +208,8 @@ void draw() {
     ExistenceStateArrayList = initializeState(ExistenceStateArrayList, ExistenceListArrayList);
     println("Number of Markers detected in this calibration:" + ExistenceListArrayList.size());
 
-    if(mousePressed == true && circleOver){
+    // if(mousePressed == true && circleOver){
+    if (key == ENTER) {
       ExistenceList = convertIntegersArray(ExistenceListArrayList);
       ExistenceState = convertIntegersArray(ExistenceStateArrayList);
       println("finish calibration");
@@ -276,7 +282,8 @@ void draw() {
       // current marker position to draw
       PMatrix3D pose_this = markerPoseMap.get(ExistenceList[i]);
       // pose current marker to another marker direction
-      PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(i+1)%2]);
+      int look_index = (i+1)%2;
+      PMatrix3D pose_look = markerPoseMap.get(ExistenceList[look_index]);
 
       if (pose_this == null || pose_look == null)
         break;
@@ -284,20 +291,37 @@ void draw() {
       float angle = rotateToMarker(pose_this, pose_look, ExistenceList[i]);
 
       pushMatrix();
+        applyMatrix(pose_this);
+        // rotateZ(angle);
+        rotateZ(angle);
+        drawHole(snowmanSize);
+      popMatrix();
+
+      pushMatrix();
         // apply matrix (cf. drawPrimitives.pde)
         applyMatrix(pose_this);
         rotateZ(angle);
-
+        // globalRotateAngle += 0.005;
+        // rotateZ(globalRotateAngle);
+        
+        // drawHole(snowmanSize);
         // draw snowman
-        drawMole(snowmanSize,0);
-        drawHoleActive(snowmanSize,i);
+        if (key != TAB){
+          moleKeyDebug = int(key) % ExistenceList.length;
+        }
+        // println("moleKey : " + moleKeyDebug);
 
-        // if (i==5){
-        //   drawHoleActive(snowmanSize,5);
-        // }
-        // else{
-        //   drawHole(snowmanSize);
-        // }
+        if (i==moleKeyDebug){
+          if (moleHitDebug){
+            angle -= 40;
+            rotateZ(angle);
+            // println("mole hit : "+moleHitDebug);
+            drawMole(snowmanSize,1);
+          }
+          else{
+            drawMole(snowmanSize,0);
+          }
+        }
         
         // noFill();
         // strokeWeight(3);
@@ -310,10 +334,10 @@ void draw() {
       popMatrix();
     }
 
-    int holeID = picker.get(mouseX, mouseY);
-    println(holeID);
-    // if(contains(ExistenceList, holeID)){
-    //   println(holeID);
+    // int id = picker.get(mouseX, mouseY);
+    // println(id);
+    // if(contains(ExistenceList, id)){
+    //   println("mouse over hole " + id);
     // }
   
     // Your Code for Homework 6 (20/06/03) - End
@@ -344,7 +368,6 @@ boolean overCircle(int x, int y, int diameter) {
     return false;
   }
 }
-
 
 boolean overObject(PMatrix3D thisObject) {
   // Someone implement this

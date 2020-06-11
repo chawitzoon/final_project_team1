@@ -2,10 +2,6 @@ import gab.opencv.*;
 import processing.video.*;
 import java.util.ArrayList;
 
-import picking.*;
-
-Picker picker;
-
 final boolean MARKER_TRACKER_DEBUG = false;
 final boolean BALL_DEBUG = false;
 
@@ -145,8 +141,6 @@ void setup() {
 
   img = createImage(opencv.width, opencv.height, RGB);
 
-  picker = new Picker(this);
-
   // draw circle button as start button
   setupButton();
 
@@ -284,38 +278,65 @@ void draw() {
       float angle = rotateToMarker(pose_this, pose_look, ExistenceList[i]);
 
       pushMatrix();
+        applyMatrix(pose_this);
+        drawHole(snowmanSize);
+      popMatrix();
+
+      pushMatrix();
         // apply matrix (cf. drawPrimitives.pde)
         applyMatrix(pose_this);
         rotateZ(angle);
 
         // draw snowman
         drawMole(snowmanSize,0);
-        drawHoleActive(snowmanSize,i);
+        // drawHole(snowmanSize);
 
-        // if (i==5){
-        //   drawHoleActive(snowmanSize,5);
+        // move ball
+        // if (ExistenceList[i] == towards) {
+        //   pushMatrix();
+        //     PVector relativeVector = new PVector();
+        //     relativeVector.x = pose_look.m03 - pose_this.m03;
+        //     relativeVector.y = pose_look.m13 - pose_this.m13;
+        //     float relativeLen = relativeVector.mag();
+
+        //     ballspeed = sqrt(GA * relativeLen / sin(radians(ballAngle) * 2));
+        //     ballPos.x = frameCnt * relativeLen / ballTotalFrame;
+
+        //     float z_quad = GA * pow(ballPos.x, 2) / (2 * pow(ballspeed, 2) * pow(cos(radians(ballAngle)), 2));
+        //     ballPos.z = -tan(radians(ballAngle)) * ballPos.x + z_quad;
+        //     frameCnt++;
+            
+        //     if (BALL_DEBUG)
+        //       println(ballPos, tan(radians(ballAngle)) * ballPos.x,  z_quad);
+
+        //     translate(ballPos.x, ballPos.y, ballPos.z - 0.025);
+        //     noStroke();
+        //     fill(255, 0, 0);
+        //     sphere(0.003);
+
+        //     if (frameCnt == ballTotalFrame) {
+        //       ballPos = new PVector();
+        //       towardscnt++;
+        //       towards = ExistenceList[towardscnt % 2];
+        //       ballAngle = random(20, 70);
+        //       frameCnt = 0;
+
+        //       if (BALL_DEBUG)
+        //         println("towards:", hex(towards));
+        //     }
+        //   popMatrix();
         // }
-        // else{
-        //   drawHole(snowmanSize);
-        // }
-        
-        // noFill();
-        // strokeWeight(3);
-        // stroke(255, 0, 0);
-        // line(0, 0, 0, 0.02, 0, 0); // draw x-axis
-        // stroke(0, 255, 0);
-        // line(0, 0, 0, 0, 0.02, 0); // draw y-axis
-        // stroke(0, 0, 255);
-        // line(0, 0, 0, 0, 0, 0.02); // draw z-axis
+
+        noFill();
+        strokeWeight(3);
+        stroke(255, 0, 0);
+        line(0, 0, 0, 0.02, 0, 0); // draw x-axis
+        stroke(0, 255, 0);
+        line(0, 0, 0, 0, 0.02, 0); // draw y-axis
+        stroke(0, 0, 255);
+        line(0, 0, 0, 0, 0, 0.02); // draw z-axis
       popMatrix();
     }
-
-    int holeID = picker.get(mouseX, mouseY);
-    println(holeID);
-    // if(contains(ExistenceList, holeID)){
-    //   println(holeID);
-    // }
-  
     // Your Code for Homework 6 (20/06/03) - End
     // **********************************************
 
@@ -332,7 +353,7 @@ void update(int x, int y) {
   } else {
     circleOver = false;
   }
-  // println(circleOver);
+  println(circleOver);
 }
 
 boolean overCircle(int x, int y, int diameter) {
@@ -345,24 +366,11 @@ boolean overCircle(int x, int y, int diameter) {
   }
 }
 
-
-boolean overObject(PMatrix3D thisObject) {
-  // Someone implement this
-  PVector relativeVector = new PVector();
-  relativeVector.x = thisObject.m03 - mouseX;
-  relativeVector.y = thisObject.m13 - mouseY;
-  relativeVector.z = thisObject.m23 ;
-  float relativeLen = relativeVector.mag();
-
-  return true;
-}
-
 void captureEvent(Capture c) {
   PGraphics3D g;
   if (!USE_DIRECTSHOW && c.available())
       c.read();
 }
-
 
 float rotateToMarker(PMatrix3D thisMarker, PMatrix3D lookAtMarker, int markernumber) {
   PVector relativeVector = new PVector();

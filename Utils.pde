@@ -91,3 +91,13 @@ PMatrix3D matToPMatrix3D(Mat m) {
 
     return fArrayToPMatrix3D(a, b, c);
 }
+
+boolean contains(final int[] array, final int key) {
+    for (final int i : array) {
+        if (i == key) {
+            return true;
+        }
+    }
+    return false;
+}
+

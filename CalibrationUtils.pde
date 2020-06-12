@@ -2,21 +2,38 @@
 import java.util.Arrays;
 import java.util.Iterator;
 
-ArrayList<Integer> calibration(ArrayList<Integer> ExistenceList) {
-  ArrayList<Marker> markers_calibrate = new ArrayList<Marker>();
+// ArrayList<Integer> calibration(ArrayList<Integer> ExistenceList) {
+//   ArrayList<Marker> markers_calibrate = new ArrayList<Marker>();
+//   ortho();
+//   pushMatrix();
+//     translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
+//     markerTracker.findMarker(markers_calibrate);
+//   popMatrix();
+//   // println("marker_calibrate.size in loop:" + markers_calibrate.size());
+//   // println("ExistenceList length in loop:" + ExistenceList.length);
+//   for (int i = 0; i < markers_calibrate.size(); i++) {
+//     Marker m = markers_calibrate.get(i);
+//     ExistenceList.add(m.code);
+//     // println("ExistenceList.length:" + ExistenceList.length);
+//   }
+//   return ExistenceList;
+// }
+
+void calibration(ArrayList<Marker> markers){
+  markers.clear();
   ortho();
   pushMatrix();
     translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
-    markerTracker.findMarker(markers_calibrate);
+    markerTracker.findMarker(markers);
   popMatrix();
   // println("marker_calibrate.size in loop:" + markers_calibrate.size());
   // println("ExistenceList length in loop:" + ExistenceList.length);
-  for (int i = 0; i < markers_calibrate.size(); i++) {
-    Marker m = markers_calibrate.get(i);
-    ExistenceList.add(m.code);
+  for (int i = 0; i < markers.size(); i++) {
+    Marker m = markers.get(i);
+    // ExistenceList.add(m.code);
     // println("ExistenceList.length:" + ExistenceList.length);
   }
-  return ExistenceList;
+  // return markers;
 }
 
 ArrayList<Integer> initializeState(ArrayList<Integer> ExistenceState, ArrayList<Integer> ExistenceList){

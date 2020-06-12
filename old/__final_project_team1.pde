@@ -50,7 +50,7 @@ final int ballTotalFrame = 10;
 final float snowmanSize = 0.020;
 int frameCnt = 0;
 
-// HashMap<Integer, PMatrix3D> markerPoseMap;
+HashMap<Integer, PMatrix3D> markerPoseMap;
 
 MarkerTracker markerTracker;
 PImage img;
@@ -61,8 +61,6 @@ int moleKeyDebug = -1;
 boolean moleHitDebug = false;
 
 float globalRotateAngle = 0;
-
-GameState gameState;
 
 
 // Circle button setup to start the game
@@ -165,34 +163,11 @@ void setup() {
   keyState = new KeyState();
 
   ballPos = new PVector();  // ball position
-  // markerPoseMap = new HashMap<Integer, PMatrix3D>();  // hashmap (code, pose)
-
-  calibration_boolean = false;
+  markerPoseMap = new HashMap<Integer, PMatrix3D>();  // hashmap (code, pose)
 }
 
+
 void draw() {
-
-  // if we use video camera
-  if (!USE_SAMPLE_IMAGE) {
-    if (USE_DIRECTSHOW) {
-      img = dcap.updateImage();
-      opencv.loadImage(img);
-    } else {
-      if (cap.width <= 0 || cap.height <= 0) {
-        println("Incorrect capture data. continue");
-        return;
-      }
-      opencv.loadImage(cap);
-    }
-  }
-
-  // setup marker detection
-  ArrayList<Marker> markers = new ArrayList<Marker>();
-  markers.clear();
-  // markers = calibration(markers);
-  calibration(markers);
-
-
   // calibration case
   if (calibration_boolean == false) {
 
@@ -209,20 +184,67 @@ void draw() {
     ellipse(circleX, circleY, circleSize, circleSize);
 
     println("In calibration case");
+   
+    ArrayList<Integer> ExistenceListArrayList = new ArrayList<Integer>();
+    ArrayList<Integer> ExistenceStateArrayList = new ArrayList<Integer>();
+    ExistenceListArrayList.clear();
+    ExistenceStateArrayList.clear();
 
-    println("Number of Markers detected in this calibration:" + markers.size());
+    // if we use video camera
+    if (!USE_SAMPLE_IMAGE) {
+      if (USE_DIRECTSHOW) {
+        img = dcap.updateImage();
+        opencv.loadImage(img);
+      } else {
+        if (cap.width <= 0 || cap.height <= 0) {
+          println("Incorrect capture data. continue");
+          return;
+        }
+        opencv.loadImage(cap);
+      }
+    }
+
+    ExistenceListArrayList = calibration(ExistenceListArrayList);
+    ExistenceStateArrayList = initializeState(ExistenceStateArrayList, ExistenceListArrayList);
+    println("Number of Markers detected in this calibration:" + ExistenceListArrayList.size());
 
     // if(mousePressed == true && circleOver){
-    if (key == ENTER && markers.size() > 0) {
-      gameState = new GameState(markers);
+    if (key == ENTER) {
+      ExistenceList = convertIntegersArray(ExistenceListArrayList);
+      ExistenceState = convertIntegersArray(ExistenceStateArrayList);
       println("finish calibration");
       calibration_boolean = true;
+      debug_display(ExistenceList, ExistenceState);
     }
     System.gc();
   }
   //game start case
-  else {
+  else{
+    debug_display(ExistenceList, ExistenceState);
     println("point:" + point);
+    ArrayList<Marker> markers = new ArrayList<Marker>();
+    markerPoseMap.clear();
+
+    if (!USE_SAMPLE_IMAGE) {
+      if (USE_DIRECTSHOW) {
+        img = dcap.updateImage();
+        opencv.loadImage(img);
+      } else {
+        if (cap.width <= 0 || cap.height <= 0) {
+          println("Incorrect capture data. continue");
+          return;
+        }
+        opencv.loadImage(cap);
+      }
+    }
+
+    // use orthographic camera to draw images and debug lines
+    // translate matrix to image center
+    ortho();
+    pushMatrix();
+      translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
+      markerTracker.findMarker(markers);
+    popMatrix();
 
     // use perspective camera
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
@@ -233,19 +255,88 @@ void draw() {
     directionalLight(180, 150, 120, 0, 1, 0);
     lights();
 
-    gameState.updateHoleState(markers);
-
-    gameState.drawGame();
-
-
-    // TODO @Daphne modifed from here to generate a function to call molePopUp
-    if (key != TAB){
-      // moleKeyDebug = int(key) % ExistenceList.length;
-      moleKeyDebug = int(key) % markers.size();
+    // for each marker, put (code, matrix) on hashmap 
+    for (int i = 0; i < markers.size(); i++) {
+      Marker m = markers.get(i);
+      markerPoseMap.put(m.code, m.pose);
     }
 
-    gameState.updateMoleExistence();
-    gameState.molePopUp(moleKeyDebug);
+    // for each marker, update loss interval if the marker detection lost.
+    for (int i = 0; i < ExistenceList.length; i++) {
+      if (markerPoseMap.get(ExistenceList[i]) == null){
+        ExistenceState[i] += 1;
+      }
+      else {
+        ExistenceState[i] = 0;
+      }
+
+      if (ExistenceState[i] >= 30) {
+        point += 1;
+        ExistenceState[i] = 0;
+      }
+    }
+
+    // The hole will be always animated, so loop for all detected marker
+    for (int i = 0; i < ExistenceList.length; i++) {
+
+      // current marker position to draw
+      PMatrix3D pose_this = markerPoseMap.get(ExistenceList[i]);
+      // pose current marker to another marker direction
+      PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(i+1)%2]);
+
+      if (pose_this == null || pose_look == null)
+        break;
+
+      float angle = rotateToMarker(pose_this, pose_look, ExistenceList[i]);
+
+      pushMatrix();
+        applyMatrix(pose_this);
+        // rotateZ(angle);
+        rotateZ(angle);
+        drawHole(snowmanSize);
+      popMatrix();
+    }
+
+    if (key != TAB){
+      moleKeyDebug = int(key) % ExistenceList.length;
+    }
+
+    PMatrix3D pose_this = markerPoseMap.get(ExistenceList[moleKeyDebug]);
+    PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(moleKeyDebug+1)%2]);
+    
+    if (pose_this != null && pose_look != null ){
+
+      float angle = rotateToMarker(pose_this, pose_look, ExistenceList[moleKeyDebug]);
+      pushMatrix();
+        // apply matrix (cf. drawPrimitives.pde)
+        applyMatrix(pose_this);
+        rotateZ(angle);
+        // globalRotateAngle += 0.005;
+        // rotateZ(globalRotateAngle);
+
+        // draw snowman
+        // println("moleKey : " + moleKeyDebug);
+
+        if (moleHitDebug){
+          angle -= 40;
+          rotateZ(angle);
+          // println("mole hit : "+moleHitDebug);
+          drawMole(snowmanSize,1);
+        }
+        else{
+          drawMole(snowmanSize,0);
+        }
+        
+        noFill();
+        strokeWeight(3);
+        stroke(255, 0, 0);
+        line(0, 0, 0, 0.02, 0, 0); // draw x-axis
+        stroke(0, 255, 0);
+        line(0, 0, 0, 0, 0.02, 0); // draw y-axis
+        stroke(0, 0, 255);
+        line(0, 0, 0, 0, 0, 0.02); // draw z-axis
+      popMatrix();
+    }
 
     // int id = picker.get(mouseX, mouseY);
     // println(id);

@@ -56,7 +56,7 @@ int[] convertIntegersArray(ArrayList<Integer> integers)
     return ret;
 }
 
-void debug_display(int[] ExistenceList, int[] ExistenceState){
+void debugDisplay(int[] ExistenceList, int[] ExistenceState){
     println("ExistenceList:" + Arrays.toString(ExistenceList));
     println("ExistenceState:" + Arrays.toString(ExistenceState));
 }

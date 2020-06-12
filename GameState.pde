@@ -58,8 +58,7 @@ class GameState {
             }
         }
 
-        printArray(holeExistence);
-        printArray(holeState);
+        debugDisplay(holeExistence, holeState);
     }
 
     void updateMoleExistence(){

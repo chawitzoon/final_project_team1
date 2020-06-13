@@ -6,7 +6,9 @@ import picking.*;
 
 Picker picker;
 
-final boolean MARKER_TRACKER_DEBUG = false;
+// final boolean MARKER_TRACKER_DEBUG = false;
+boolean MARKER_TRACKER_DEBUG = true;
+
 final boolean BALL_DEBUG = false;
 
 final boolean USE_SAMPLE_IMAGE = true;
@@ -195,6 +197,7 @@ void draw() {
 
   // calibration case
   if (calibration_boolean == false) {
+    keyState.getKeyEvent();
 
     // startButton
     update(mouseX, mouseY);
@@ -217,6 +220,7 @@ void draw() {
       gameState = new GameState(markers);
       println("finish calibration");
       calibration_boolean = true;
+      MARKER_TRACKER_DEBUG = false;
     }
     System.gc();
   }
@@ -233,6 +237,7 @@ void draw() {
     directionalLight(180, 150, 120, 0, 1, 0);
     lights();
 
+    println("mouseX : " + mouseX + " , mouseY : " + mouseY);
     gameState.updateHoleState(markers);
 
     gameState.drawGame();
@@ -240,10 +245,8 @@ void draw() {
 
     // TODO @Daphne modifed from here to generate a function to call molePopUp
     if (key != TAB){
-      // moleKeyDebug = int(key) % ExistenceList.length;
       moleKeyDebug = int(key) % markers.size();
     }
-
     gameState.updateMoleExistence();
     gameState.molePopUp(moleKeyDebug);
 

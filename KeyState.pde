@@ -37,13 +37,22 @@ class KeyState {
     if (getState(DOWN)) {
       markerTracker.bw_thresh -= 1;
     }
+
   }
 }
 
 void keyPressed() {
+  if (key == TAB) {
+    // modified global variable from GameState
+    moleHitDebug = true;
+  }
   keyState.putState(keyCode, true);
 }
 
 void keyReleased() {
+  if (key == TAB) {
+    // odified global variable from GameState
+    moleHitDebug = false;
+  }
   keyState.putState(keyCode, false);
 }

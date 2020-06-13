@@ -2,7 +2,13 @@ import gab.opencv.*;
 import processing.video.*;
 import java.util.ArrayList;
 
-final boolean MARKER_TRACKER_DEBUG = false;
+import picking.*;
+
+Picker picker;
+
+// final boolean MARKER_TRACKER_DEBUG = false;
+boolean MARKER_TRACKER_DEBUG = true;
+
 final boolean BALL_DEBUG = false;
 
 final boolean USE_SAMPLE_IMAGE = true;
@@ -46,12 +52,29 @@ final int ballTotalFrame = 10;
 final float snowmanSize = 0.020;
 int frameCnt = 0;
 
-HashMap<Integer, PMatrix3D> markerPoseMap;
+// HashMap<Integer, PMatrix3D> markerPoseMap;
 
 MarkerTracker markerTracker;
 PImage img;
 
 KeyState keyState;
+
+int moleKeyDebug = -1;
+boolean moleHitDebug = false;
+
+float globalRotateAngle = 0;
+
+GameState gameState;
+
+
+// Circle button setup to start the game
+// from https://processing.org/examples/button.html
+int circleX, circleY;  // Position of circle button
+int circleSize = 93;   // Diameter of circle
+color circleColor, baseColor;
+color circleHighlight;
+color currentColor;
+boolean circleOver = false;
 
 void selectCamera() {
   String[] cameras = Capture.list();
@@ -68,7 +91,7 @@ void selectCamera() {
 
     // The camera can be initialized directly using an element
     // from the array returned by list():
-    //cap = new Capture(this, cameras[5]);
+    // cap = new Capture(this, cameras[5]);
 
     // Or, the settings can be defined based on the text in the list
     // cap = new Capture(this, 1280, 720, "USB2.0 HD UVC WebCam", 30);
@@ -81,6 +104,16 @@ void setupCamera() {
     selectCamera();
     opencv = new OpenCV(this, cap.width, cap.height);
   }
+}
+
+void setupButton(){
+  circleColor = color(0);
+  circleHighlight = color(204);
+  baseColor = color(102);
+  currentColor = baseColor;
+  circleX = opencv.width/2+circleSize/2;
+  circleY = opencv.height/2;
+  ellipseMode(CENTER);
 }
 
 
@@ -121,6 +154,11 @@ void setup() {
 
   img = createImage(opencv.width, opencv.height, RGB);
 
+  // picker = new Picker(this);
+
+  // draw circle button as start button
+  setupButton();
+
   // Align the camera coordinate system with the world coordinate system
   // (cf. drawSnowman.pde)
   PMatrix3D cameraMat = ((PGraphicsOpenGL)g).camera;
@@ -129,74 +167,66 @@ void setup() {
   keyState = new KeyState();
 
   ballPos = new PVector();  // ball position
-  markerPoseMap = new HashMap<Integer, PMatrix3D>();  // hashmap (code, pose)
+  // markerPoseMap = new HashMap<Integer, PMatrix3D>();  // hashmap (code, pose)
+
+  calibration_boolean = false;
 }
 
-
 void draw() {
+
+  // if we use video camera
+  if (!USE_SAMPLE_IMAGE) {
+    if (USE_DIRECTSHOW) {
+      img = dcap.updateImage();
+      opencv.loadImage(img);
+    } else {
+      if (cap.width <= 0 || cap.height <= 0) {
+        println("Incorrect capture data. continue");
+        return;
+      }
+      opencv.loadImage(cap);
+    }
+  }
+
+  // setup marker detection
+  ArrayList<Marker> markers = new ArrayList<Marker>();
+  markers.clear();
+  // markers = calibration(markers);
+  calibration(markers);
+
+
   // calibration case
   if (calibration_boolean == false) {
-    println("In calibration case");
-   
-    ArrayList<Integer> ExistenceListArrayList = new ArrayList<Integer>();
-    ArrayList<Integer> ExistenceStateArrayList = new ArrayList<Integer>();
-    ExistenceListArrayList.clear();
-    ExistenceStateArrayList.clear();
+    keyState.getKeyEvent();
 
-    // if we use video camera
-    if (!USE_SAMPLE_IMAGE) {
-      if (USE_DIRECTSHOW) {
-        img = dcap.updateImage();
-        opencv.loadImage(img);
-      } else {
-        if (cap.width <= 0 || cap.height <= 0) {
-          println("Incorrect capture data. continue");
-          return;
-        }
-        opencv.loadImage(cap);
-      }
+    // startButton
+    update(mouseX, mouseY);
+    if (circleOver) {
+      fill(circleHighlight);
+    } else {
+      fill(circleColor);
     }
+    // TODO can someone help to make an ellipse appear to indicate button presence
+    strokeWeight(3);
+    stroke(255, 255, 255);
+    ellipse(circleX, circleY, circleSize, circleSize);
 
-    ExistenceListArrayList = calibration(ExistenceListArrayList);
-    ExistenceStateArrayList = initializeState(ExistenceStateArrayList, ExistenceListArrayList);
-    println("Number of Markers detected in this calibration:" + ExistenceListArrayList.size());
+    println("In calibration case");
 
-    if(mousePressed == true){
-      ExistenceList = convertIntegersArray(ExistenceListArrayList);
-      ExistenceState = convertIntegersArray(ExistenceStateArrayList);
+    println("Number of Markers detected in this calibration:" + markers.size());
+
+    // if(mousePressed == true && circleOver){
+    if (key == ENTER && markers.size() > 0) {
+      gameState = new GameState(markers);
       println("finish calibration");
       calibration_boolean = true;
-      debug_display(ExistenceList, ExistenceState);
+      MARKER_TRACKER_DEBUG = false;
     }
     System.gc();
   }
   //game start case
-  else{
-    debug_display(ExistenceList, ExistenceState);
+  else {
     println("point:" + point);
-    ArrayList<Marker> markers = new ArrayList<Marker>();
-    markerPoseMap.clear();
-
-    if (!USE_SAMPLE_IMAGE) {
-      if (USE_DIRECTSHOW) {
-        img = dcap.updateImage();
-        opencv.loadImage(img);
-      } else {
-        if (cap.width <= 0 || cap.height <= 0) {
-          println("Incorrect capture data. continue");
-          return;
-        }
-        opencv.loadImage(cap);
-      }
-    }
-
-    // use orthographic camera to draw images and debug lines
-    // translate matrix to image center
-    ortho();
-    pushMatrix();
-      translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
-      markerTracker.findMarker(markers);
-    popMatrix();
 
     // use perspective camera
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
@@ -207,92 +237,25 @@ void draw() {
     directionalLight(180, 150, 120, 0, 1, 0);
     lights();
 
-    // for each marker, put (code, matrix) on hashmap 
-    for (int i = 0; i < markers.size(); i++) {
-      Marker m = markers.get(i);
-      markerPoseMap.put(m.code, m.pose);
+    println("mouseX : " + mouseX + " , mouseY : " + mouseY);
+    gameState.updateHoleState(markers);
+
+    gameState.drawGame();
+
+
+    // TODO @Daphne modifed from here to generate a function to call molePopUp
+    if (key != TAB){
+      moleKeyDebug = int(key) % markers.size();
     }
+    gameState.updateMoleExistence();
+    gameState.molePopUp(moleKeyDebug);
 
-    // for each marker, update loss interval if the marker detection lost.
-    for (int i = 0; i < ExistenceList.length; i++) {
-      if (markerPoseMap.get(ExistenceList[i]) == null){
-        ExistenceState[i] += 1;
-      }
-      else {
-        ExistenceState[i] = 0;
-      }
-
-      if (ExistenceState[i] >= 30) {
-        point += 1;
-        ExistenceState[i] = 0;
-      }
-    }
-
-    // The snowmen face each other
-    for (int i = 0; i < ExistenceList.length; i++) {
-      PMatrix3D pose_this = markerPoseMap.get(ExistenceList[i]);
-      PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(i+1)%2]);
-
-      if (pose_this == null || pose_look == null)
-        break;
-
-      float angle = rotateToMarker(pose_this, pose_look, ExistenceList[i]);
-
-      pushMatrix();
-        // apply matrix (cf. drawPrimitives.pde)
-        applyMatrix(pose_this);
-        rotateZ(angle);
-
-        // draw snowman
-        drawMole(snowmanSize,0);
-        drawHole(snowmanSize);
-
-        // move ball
-        // if (ExistenceList[i] == towards) {
-        //   pushMatrix();
-        //     PVector relativeVector = new PVector();
-        //     relativeVector.x = pose_look.m03 - pose_this.m03;
-        //     relativeVector.y = pose_look.m13 - pose_this.m13;
-        //     float relativeLen = relativeVector.mag();
-
-        //     ballspeed = sqrt(GA * relativeLen / sin(radians(ballAngle) * 2));
-        //     ballPos.x = frameCnt * relativeLen / ballTotalFrame;
-
-        //     float z_quad = GA * pow(ballPos.x, 2) / (2 * pow(ballspeed, 2) * pow(cos(radians(ballAngle)), 2));
-        //     ballPos.z = -tan(radians(ballAngle)) * ballPos.x + z_quad;
-        //     frameCnt++;
-            
-        //     if (BALL_DEBUG)
-        //       println(ballPos, tan(radians(ballAngle)) * ballPos.x,  z_quad);
-
-        //     translate(ballPos.x, ballPos.y, ballPos.z - 0.025);
-        //     noStroke();
-        //     fill(255, 0, 0);
-        //     sphere(0.003);
-
-        //     if (frameCnt == ballTotalFrame) {
-        //       ballPos = new PVector();
-        //       towardscnt++;
-        //       towards = ExistenceList[towardscnt % 2];
-        //       ballAngle = random(20, 70);
-        //       frameCnt = 0;
-
-        //       if (BALL_DEBUG)
-        //         println("towards:", hex(towards));
-        //     }
-        //   popMatrix();
-        // }
-
-        noFill();
-        strokeWeight(3);
-        stroke(255, 0, 0);
-        line(0, 0, 0, 0.02, 0, 0); // draw x-axis
-        stroke(0, 255, 0);
-        line(0, 0, 0, 0, 0.02, 0); // draw y-axis
-        stroke(0, 0, 255);
-        line(0, 0, 0, 0, 0, 0.02); // draw z-axis
-      popMatrix();
-    }
+    // int id = picker.get(mouseX, mouseY);
+    // println(id);
+    // if(contains(ExistenceList, id)){
+    //   println("mouse over hole " + id);
+    // }
+  
     // Your Code for Homework 6 (20/06/03) - End
     // **********************************************
 
@@ -303,33 +266,39 @@ void draw() {
   }
 }
 
+void update(int x, int y) {
+  if ( overCircle(circleX, circleY, circleSize) ) {
+    circleOver = true;
+  } else {
+    circleOver = false;
+  }
+  // println(circleOver);
+}
+
+boolean overCircle(int x, int y, int diameter) {
+  float disX = x - mouseX;
+  float disY = y - mouseY;
+  if (sqrt(sq(disX) + sq(disY)) < diameter/2 ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+boolean overObject(PMatrix3D thisObject) {
+  // Someone implement this
+  PVector relativeVector = new PVector();
+  relativeVector.x = thisObject.m03 - mouseX;
+  relativeVector.y = thisObject.m13 - mouseY;
+  relativeVector.z = thisObject.m23 ;
+  float relativeLen = relativeVector.mag();
+
+  return true;
+}
+
 void captureEvent(Capture c) {
   PGraphics3D g;
   if (!USE_DIRECTSHOW && c.available())
       c.read();
-}
-
-float rotateToMarker(PMatrix3D thisMarker, PMatrix3D lookAtMarker, int markernumber) {
-  PVector relativeVector = new PVector();
-  relativeVector.x = lookAtMarker.m03 - thisMarker.m03;
-  relativeVector.y = lookAtMarker.m13 - thisMarker.m13;
-  relativeVector.z = lookAtMarker.m23 - thisMarker.m23;
-  float relativeLen = relativeVector.mag();
-
-  relativeVector.normalize();
-
-  float[] defaultLook = {1, 0, 0, 0};
-  snowmanLookVector = new PVector();
-  snowmanLookVector.x = thisMarker.m00 * defaultLook[0];
-  snowmanLookVector.y = thisMarker.m10 * defaultLook[0];
-  snowmanLookVector.z = thisMarker.m20 * defaultLook[0];
-
-  snowmanLookVector.normalize();
-
-  float angle = PVector.angleBetween(relativeVector, snowmanLookVector);
-  if (relativeVector.x * snowmanLookVector.y - relativeVector.y * snowmanLookVector.x < 0)
-    angle *= -1;
-
-  return angle;
 }
 

@@ -2,25 +2,37 @@
 import java.util.Arrays;
 import java.util.Iterator;
 
-ArrayList<Integer> calibration(ArrayList<Integer> ExistenceList) {
-    ArrayList<Marker> markers_calibrate = new ArrayList<Marker>();
-    ortho();
-    pushMatrix();
-    translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
-    markerTracker.findMarker(markers_calibrate);
-    popMatrix();
+// ArrayList<Integer> calibration(ArrayList<Integer> ExistenceList) {
+//   ArrayList<Marker> markers_calibrate = new ArrayList<Marker>();
+//   ortho();
+//   pushMatrix();
+//     translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
+//     markerTracker.findMarker(markers_calibrate);
+//   popMatrix();
 //   println("marker_calibrate.size in loop:" + markers_calibrate.size());
 //   println("ExistenceList length in loop:" + ExistenceList.length);
-  for (int i = 0; i < markers_calibrate.size(); i++) {
-      Marker m = markers_calibrate.get(i);
-      ExistenceList.add(m.code);
-    //   println("ExistenceList.length:" + ExistenceList.length);
-  }
-  return ExistenceList;
+//   for (int i = 0; i < markers_calibrate.size(); i++) {
+//     Marker m = markers_calibrate.get(i);
+//     ExistenceList.add(m.code);
+//     println("ExistenceList.length:" + ExistenceList.length);
+//   }
+//   return ExistenceList;
+// }
+
+void calibration(ArrayList<Marker> markers){
+  markers.clear();
+  ortho();
+  pushMatrix();
+    translate(-width/2, -height/2,-(height/2)/tan(radians(fov)));
+    markerTracker.findMarker(markers);
+  popMatrix();
+  println("marker.size in loop:" + markers.size());
+
 }
 
 ArrayList<Integer> initializeState(ArrayList<Integer> ExistenceState, ArrayList<Integer> ExistenceList){
-     //int in the array have values 0,1,..,5 ( == get point when marker detection loss 5 iteration). each int correspond to each matrix in ExistenceList with same index.
+  // int in the array have values 0,1,..,5 ( == get point when marker detection loss 5 iteration). 
+  // each int correspond to each matrix in ExistenceList with same index.
     for (int i = 0; i < ExistenceList.size(); i++) {
       ExistenceState.add(0);
     }
@@ -38,7 +50,7 @@ int[] convertIntegersArray(ArrayList<Integer> integers)
     return ret;
 }
 
-void debug_display(int[] ExistenceList, int[] ExistenceState){
+void debugDisplay(int[] ExistenceList, int[] ExistenceState){
     println("ExistenceList:" + Arrays.toString(ExistenceList));
     println("ExistenceState:" + Arrays.toString(ExistenceState));
 }

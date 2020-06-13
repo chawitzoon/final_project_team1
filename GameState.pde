@@ -15,11 +15,11 @@ class GameState {
   int point;
 
   HashMap<Integer, PMatrix3D> markerPoseMap;
-  // HashMap<Integer, PMatrix3D> frameMarkerPoseMap;
+  HashMap<Integer, PMatrix3D> frameMarkerPoseMap;
 
   GameState (ArrayList<Marker> markers) {
     markerPoseMap = new HashMap<Integer, PMatrix3D>();
-    // frameMarkerPoseMap = new HashMap<Integer, PMatrix3D>();
+    frameMarkerPoseMap = new HashMap<Integer, PMatrix3D>();
     for (int i = 0; i < markers.size(); i++) {
       Marker m = markers.get(i);
       markerPoseMap.put(m.code, m.pose);
@@ -46,12 +46,15 @@ class GameState {
 
 
   void updateHoleState(ArrayList<Marker> markers){
+    // don't clear markerPoseMap to display the current/last marker pose
     // markerPoseMap.clear();
-    // frameMarkerPoseMap.clear();
+
+    // to detect hit using marker loss, clear frameMarkerPose instead;
+    frameMarkerPoseMap.clear();
     for (int i = 0; i < markers.size(); i++) {
       Marker m = markers.get(i);
       markerPoseMap.put(m.code, m.pose);
-      // frameMarkerPoseMap.put(m.code, m.pose);
+      frameMarkerPoseMap.put(m.code, m.pose);
     }
     // for each marker, update loss interval if the marker detection lost.
     for (int i = 0; i < holeExistence.length; i++) {

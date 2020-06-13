@@ -250,9 +250,10 @@ void draw() {
     // TODO @Daphne modifed from here to generate a function to call molePopUp
     if (key != TAB || key != ENTER){
       moleKeyDebug = int(key) % gameState.getNumberofHole();
+      gameState.molePopUp(moleKeyDebug);
     }
+
     gameState.updateMoleExistence();
-    gameState.molePopUp(moleKeyDebug);
 
     // int id = picker.get(mouseX, mouseY);
     // println(id);

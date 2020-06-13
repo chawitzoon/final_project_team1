@@ -39,6 +39,33 @@ void drawCylinder(float topRadius, float bottomRadius, float tall, int sides) {
   }
 }
 
+void drawHoleActive(float r, int id) {
+  r *= 0.7;
+
+  picker.start(id);
+  pushMatrix();
+    fill(0);
+    noStroke();
+    ellipse(0,0,2*r,2*r);
+  popMatrix();
+  // picker.stop();
+  picker.draw();
+
+  pushMatrix();
+    float theta = 0;
+    float s = r/12;
+    int n = 12*4;
+    for (int i = 0; i < n; i++) {
+      theta += 2*PI/n;
+      translate(r*cos(theta), r*sin(theta), 0);
+      fill(100);
+      noStroke();
+      sphere(s);//stone size
+      translate(-r*cos(theta), -r*sin(theta), 0);
+    }
+  popMatrix();
+}
+
 void drawHole(float r) {
   r *= 0.7;
   pushMatrix();
@@ -46,6 +73,7 @@ void drawHole(float r) {
     noStroke();
     ellipse(0,0,2*r,2*r);
   popMatrix();
+
   pushMatrix();
     float theta = 0;
     float s = r/12;

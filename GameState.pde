@@ -1,7 +1,7 @@
 
 class GameState {
   int holeNum = 0;
-  int threshold = 30;
+  int threshold = 5;
   int[] holeState; 
   int[] holeExistence;
 
@@ -15,12 +15,15 @@ class GameState {
   int point;
 
   HashMap<Integer, PMatrix3D> markerPoseMap;
+  // HashMap<Integer, PMatrix3D> frameMarkerPoseMap;
 
   GameState (ArrayList<Marker> markers) {
     markerPoseMap = new HashMap<Integer, PMatrix3D>();
+    // frameMarkerPoseMap = new HashMap<Integer, PMatrix3D>();
     for (int i = 0; i < markers.size(); i++) {
       Marker m = markers.get(i);
       markerPoseMap.put(m.code, m.pose);
+      // frameMarkerPoseMap.put(m.code, m.pose);
     }
 
     holeNum = markerPoseMap.size();
@@ -43,10 +46,12 @@ class GameState {
 
 
   void updateHoleState(ArrayList<Marker> markers){
-    markerPoseMap.clear();
+    // markerPoseMap.clear();
+    // frameMarkerPoseMap.clear();
     for (int i = 0; i < markers.size(); i++) {
       Marker m = markers.get(i);
       markerPoseMap.put(m.code, m.pose);
+      // frameMarkerPoseMap.put(m.code, m.pose);
     }
     // for each marker, update loss interval if the marker detection lost.
     for (int i = 0; i < holeExistence.length; i++) {
@@ -55,6 +60,11 @@ class GameState {
       }
       else {
         holeState[i] = 0;
+      }
+
+      if (holeState[i] > threshold && moleExistence[i] == 1) {
+        moleState[i] = 2;
+        point += 1;
       }
     }
     debugDisplay(holeExistence, holeState);
@@ -84,7 +94,7 @@ class GameState {
       PMatrix3D pose_look = markerPoseMap.get(holeExistence[(i+1)%2]);
 
       if (pose_this == null || pose_look == null)
-        break;
+        continue;
 
       float angle = rotateToMarker(pose_this, pose_look, holeExistence[i]);
 
@@ -134,13 +144,19 @@ class GameState {
         line(0, 0, 0, 0, 0, 0.02); // draw z-axis
       popMatrix();
     }
+    moleState[moleIndex] = 1;
+  }
+
+  void molePopDown(int moleIndex){
+    moleState[moleIndex] = 0;
   }
 
   /**
   * Param int @i : index of checked marker still detected
   **/
   boolean holeHitOnMarkerLoss(int i){
-    return markerPoseMap.get(holeExistence[i]) == null;
+    // return markerPoseMap.get(holeExistence[i]) == null;
+    return frameMarkerPoseMap.get(holeExistence[i]) == null;
   }
 
   boolean holeHitOnClick(int i){
@@ -189,6 +205,10 @@ class GameState {
 
   int getMoleExistence(int holeIndex){
     return moleExistence[holeIndex];
+  }
+
+  int getNumberofHole(){
+    return holeExistence.length;
   }
 }
 

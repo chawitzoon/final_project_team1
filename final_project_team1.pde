@@ -11,7 +11,7 @@ boolean MARKER_TRACKER_DEBUG = true;
 
 final boolean BALL_DEBUG = false;
 
-final boolean USE_SAMPLE_IMAGE = true;
+final boolean USE_SAMPLE_IMAGE = false;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
 // cannot work with processing.video.Capture.*.
@@ -226,7 +226,11 @@ void draw() {
   }
   //game start case
   else {
-    println("point:" + point);
+    println("point:" + gameState.point);
+
+    fill(255, 0, 0);
+    textSize(20);
+    text("point : "    + gameState.point,    width-200, 100);
 
     // use perspective camera
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
@@ -244,8 +248,8 @@ void draw() {
 
 
     // TODO @Daphne modifed from here to generate a function to call molePopUp
-    if (key != TAB){
-      moleKeyDebug = int(key) % markers.size();
+    if (key != TAB || key != ENTER){
+      moleKeyDebug = int(key) % gameState.getNumberofHole();
     }
     gameState.updateMoleExistence();
     gameState.molePopUp(moleKeyDebug);

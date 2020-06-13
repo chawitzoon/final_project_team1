@@ -62,6 +62,7 @@ class GameState {
         holeState[i] += 1;
       }
       else {
+        moleState[i] = 1;
         holeState[i] = 0;
       }
 
@@ -147,7 +148,6 @@ class GameState {
         line(0, 0, 0, 0, 0, 0.02); // draw z-axis
       popMatrix();
     }
-    moleState[moleIndex] = 1;
   }
 
   void molePopDown(int moleIndex){

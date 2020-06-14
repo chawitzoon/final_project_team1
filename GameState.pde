@@ -14,6 +14,10 @@ class GameState {
 
   int point;
 
+  int score = 0;
+
+  int gameDuration= 20;
+
   HashMap<Integer, PMatrix3D> markerPoseMap;
   HashMap<Integer, PMatrix3D> frameMarkerPoseMap;
 
@@ -62,7 +66,7 @@ class GameState {
         holeState[i] += 1;
       }
       else {
-        moleState[i] = 1;
+        //moleState[i] = 1; @Fariz it makes molestate always be 1 and can't popdown the mole
         holeState[i] = 0;
       }
 
@@ -212,6 +216,23 @@ class GameState {
 
   int getNumberofHole(){
     return holeExistence.length;
+  }
+
+  int getScore(){
+        return score;
+    }
+
+  void addScore(){
+      score += 10;
+  }
+
+  void minusScore(){
+      score -= 5;
+  }
+
+  boolean timeup(long passTime, long dueTime){
+      if(passTime >= dueTime) return true;
+      return false;
   }
 }
 

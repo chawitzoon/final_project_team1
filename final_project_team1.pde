@@ -1,6 +1,8 @@
 import gab.opencv.*;
 import processing.video.*;
 import java.util.ArrayList;
+import java.util.Random;
+import java.lang.*;
 
 import picking.*;
 
@@ -37,7 +39,6 @@ int towardscnt = 0;   // if ball reached, +1 to change the target
 
 int[] ExistenceList;
 int[] ExistenceState;
-int point = 0;
 int towards = 0x005A; //for throwing ball example
 boolean calibration_boolean = false;
 
@@ -66,6 +67,13 @@ float globalRotateAngle = 0;
 
 GameState gameState;
 
+//for game mechanics
+Random rand = new Random();
+int[] moleAppearDuration; 
+int[] moleHideDuration; 
+long[] startTime;
+long gameStartTime;
+boolean spressed = false;
 
 // Circle button setup to start the game
 // from https://processing.org/examples/button.html
@@ -95,7 +103,7 @@ void selectCamera() {
 
     // Or, the settings can be defined based on the text in the list
     // cap = new Capture(this, 1280, 720, "USB2.0 HD UVC WebCam", 30);
-    cap = new Capture(this, 1280, 720, 10);
+    cap = new Capture(this, 640, 480, 30);
   }
 }
 
@@ -221,16 +229,26 @@ void draw() {
       println("finish calibration");
       calibration_boolean = true;
       MARKER_TRACKER_DEBUG = false;
+      //init game state
+      initGame(markers.size());
+      
     }
     System.gc();
   }
   //game start case
   else {
-    println("point:" + gameState.point);
+    println("Score:" + gameState.score);
 
-    fill(255, 0, 0);
+    // show time and score
+    fill(255, 255, 255);
     textSize(20);
-    text("point : "    + gameState.point,    width-200, 100);
+    text("Score : "    + gameState.score, width-480  , 200);
+
+    int countdown = gameState.gameDuration - int((System.currentTimeMillis() - gameStartTime)/1000);
+    if(countdown < 0 ) countdown = 0;
+    fill(255, 255, 255);
+    textSize(20);
+    text("Time : "    + countdown, width-480  , 150);
 
     // use perspective camera
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
@@ -246,12 +264,56 @@ void draw() {
 
     gameState.drawGame();
 
-
+    
     // TODO @Daphne modifed from here to generate a function to call molePopUp
-    if (key != TAB || key != ENTER){
+    long timer = System.currentTimeMillis();
+
+    if(mousePressed == true){//restart game
+      initGame(markers.size());
+      println("Restart Game");
+    }
+    
+    if(gameState.timeup(System.currentTimeMillis() - gameStartTime , gameState.gameDuration*1000)){
+      println("end game");
+    }
+    else{
+      for(int i=0;i<markers.size();i++){
+        // mole popup
+        if(gameState.getMoleState(i) ==  0 && gameState.timeup(timer - startTime[i], moleHideDuration[i])){
+          startTime[i] = timer;
+          moleHideDuration[i] = rand.nextInt(3000)+3000; //3-5
+          gameState.updateMoleState(i,1);
+        }
+        // hide the mole when it's not hit and overtime
+        else if(gameState.getMoleState(i) ==  1 && gameState.timeup(timer - startTime[i], moleAppearDuration[i])){
+          startTime[i] = timer;
+          moleAppearDuration[i] = rand.nextInt(3000)+1000; //1-3
+          gameState.molePopDown(i);
+          gameState.minusScore();
+        }
+        //hit the mole
+        else if(gameState.getMoleState(i) ==  1 && gameState.holeHitOnMarkerLoss(i) ){
+          moleHideDuration[i] = rand.nextInt(3000)+3000; //3-5
+          startTime[i] = timer;
+          gameState.updateMoleState(i,2);
+          gameState.addScore();
+        }
+        //mole hit animation(?), when mole state is 2
+        else if(gameState.getMoleState(i) ==  2 && gameState.timeup(timer - startTime[i], 500)){
+          startTime[i] = timer;
+          gameState.updateMoleState(i,0);
+        }
+
+        if(gameState.getMoleState(i) == 1 || gameState.getMoleState(i) == 2){
+           gameState.molePopUp(i);
+        }
+      }
+    }
+
+    /*if (key != TAB || key != ENTER){
       moleKeyDebug = int(key) % gameState.getNumberofHole();
       gameState.molePopUp(moleKeyDebug);
-    }
+    }*/
 
     gameState.updateMoleExistence();
 
@@ -305,5 +367,19 @@ void captureEvent(Capture c) {
   PGraphics3D g;
   if (!USE_DIRECTSHOW && c.available())
       c.read();
+}
+
+void initGame(int markerNum){
+  //init game state
+    moleAppearDuration = new int[markerNum] ;
+    moleHideDuration = new int[markerNum] ;
+    startTime = new long[markerNum];
+    gameState.score = 0;
+    gameStartTime = System.currentTimeMillis();
+    for(int i=0;i<markerNum;i++){
+      moleAppearDuration[i] = rand.nextInt(3000)+1000;
+      moleHideDuration[i] = rand.nextInt(3000)+3000;
+      gameState.molePopDown(i);
+    }
 }
 

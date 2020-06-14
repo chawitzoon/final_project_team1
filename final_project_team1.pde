@@ -6,10 +6,12 @@ import picking.*;
 
 Picker picker;
 
-final boolean MARKER_TRACKER_DEBUG = false;
+// final boolean MARKER_TRACKER_DEBUG = false;
+boolean MARKER_TRACKER_DEBUG = true;
+
 final boolean BALL_DEBUG = false;
 
-final boolean USE_SAMPLE_IMAGE = true;
+final boolean USE_SAMPLE_IMAGE = false;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
 // cannot work with processing.video.Capture.*.
@@ -195,6 +197,7 @@ void draw() {
 
   // calibration case
   if (calibration_boolean == false) {
+    keyState.getKeyEvent();
 
     // startButton
     update(mouseX, mouseY);
@@ -217,12 +220,17 @@ void draw() {
       gameState = new GameState(markers);
       println("finish calibration");
       calibration_boolean = true;
+      MARKER_TRACKER_DEBUG = false;
     }
     System.gc();
   }
   //game start case
   else {
-    println("point:" + point);
+    println("point:" + gameState.point);
+
+    fill(255, 0, 0);
+    textSize(20);
+    text("point : "    + gameState.point,    width-200, 100);
 
     // use perspective camera
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
@@ -233,19 +241,19 @@ void draw() {
     directionalLight(180, 150, 120, 0, 1, 0);
     lights();
 
+    println("mouseX : " + mouseX + " , mouseY : " + mouseY);
     gameState.updateHoleState(markers);
 
     gameState.drawGame();
 
 
     // TODO @Daphne modifed from here to generate a function to call molePopUp
-    if (key != TAB){
-      // moleKeyDebug = int(key) % ExistenceList.length;
-      moleKeyDebug = int(key) % markers.size();
+    if (key != TAB || key != ENTER){
+      moleKeyDebug = int(key) % gameState.getNumberofHole();
+      gameState.molePopUp(moleKeyDebug);
     }
 
     gameState.updateMoleExistence();
-    gameState.molePopUp(moleKeyDebug);
 
     // int id = picker.get(mouseX, mouseY);
     // println(id);

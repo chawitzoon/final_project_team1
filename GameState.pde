@@ -1,3 +1,4 @@
+import java.util.Random;
 
 class GameState {
   int holeNum = 0;
@@ -141,7 +142,7 @@ class GameState {
         } else {
             drawMole(snowmanSize,0);
         }
-        
+
         noFill();
         strokeWeight(3);
         stroke(255, 0, 0);
@@ -219,8 +220,8 @@ class GameState {
   }
 
   int getScore(){
-        return score;
-    }
+      return score;
+  }
 
   void addScore(){
       score += 10;
@@ -233,6 +234,14 @@ class GameState {
   boolean timeup(long passTime, long dueTime){
       if(passTime >= dueTime) return true;
       return false;
+  }
+
+  int randAppearDuration(){
+      return rand.nextInt(2000)+1000;
+  }
+
+  int randHideDuration(){
+      return rand.nextInt(3000)+2000;
   }
 }
 

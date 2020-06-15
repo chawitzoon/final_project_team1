@@ -1,7 +1,6 @@
 import gab.opencv.*;
 import processing.video.*;
 import java.util.ArrayList;
-import java.util.Random;
 import java.lang.*;
 
 import picking.*;
@@ -266,44 +265,49 @@ void draw() {
 
     
     // TODO @Daphne modifed from here to generate a function to call molePopUp
-    long timer = System.currentTimeMillis();
+    
 
-    if(mousePressed == true){//restart game
+    //restart game
+    if(mousePressed == true){
       initGame(markers.size());
       println("Restart Game");
     }
-    
+    //time up for the game
     if(gameState.timeup(System.currentTimeMillis() - gameStartTime , gameState.gameDuration*1000)){
       println("end game");
     }
-    else{
+    else{//game running
+      long timer = System.currentTimeMillis();
       for(int i=0;i<markers.size();i++){
         // mole popup
         if(gameState.getMoleState(i) ==  0 && gameState.timeup(timer - startTime[i], moleHideDuration[i])){
+          println("timer " + String.valueOf(timer));
+          println("startTime " + String.valueOf(startTime[i]));
           startTime[i] = timer;
-          moleHideDuration[i] = rand.nextInt(3000)+3000; //3-5
+          moleHideDuration[i] = gameState.randHideDuration();
           gameState.updateMoleState(i,1);
         }
         // hide the mole when it's not hit and overtime
         else if(gameState.getMoleState(i) ==  1 && gameState.timeup(timer - startTime[i], moleAppearDuration[i])){
           startTime[i] = timer;
-          moleAppearDuration[i] = rand.nextInt(3000)+1000; //1-3
+          moleAppearDuration[i] = gameState.randAppearDuration();
           gameState.molePopDown(i);
           gameState.minusScore();
         }
-        //hit the mole
+        // hit the mole
         else if(gameState.getMoleState(i) ==  1 && gameState.holeHitOnMarkerLoss(i) ){
-          moleHideDuration[i] = rand.nextInt(3000)+3000; //3-5
+          moleHideDuration[i] = gameState.randHideDuration();
           startTime[i] = timer;
           gameState.updateMoleState(i,2);
           gameState.addScore();
         }
-        //mole hit animation(?), when mole state is 2
-        else if(gameState.getMoleState(i) ==  2 && gameState.timeup(timer - startTime[i], 500)){
+        //end mole hit animation(?), when mole state is 2
+        else if(gameState.getMoleState(i) ==  2 && gameState.timeup(timer - startTime[i], 1000)){
           startTime[i] = timer;
-          gameState.updateMoleState(i,0);
+          gameState.molePopDown(i);
         }
 
+        //show mole when mole state = 1,2
         if(gameState.getMoleState(i) == 1 || gameState.getMoleState(i) == 2){
            gameState.molePopUp(i);
         }
@@ -316,7 +320,6 @@ void draw() {
     }*/
 
     gameState.updateMoleExistence();
-
     // int id = picker.get(mouseX, mouseY);
     // println(id);
     // if(contains(ExistenceList, id)){
@@ -371,15 +374,16 @@ void captureEvent(Capture c) {
 
 void initGame(int markerNum){
   //init game state
-    moleAppearDuration = new int[markerNum] ;
-    moleHideDuration = new int[markerNum] ;
-    startTime = new long[markerNum];
-    gameState.score = 0;
-    gameStartTime = System.currentTimeMillis();
-    for(int i=0;i<markerNum;i++){
-      moleAppearDuration[i] = rand.nextInt(3000)+1000;
-      moleHideDuration[i] = rand.nextInt(3000)+3000;
-      gameState.molePopDown(i);
-    }
+  moleAppearDuration = new int[markerNum] ;
+  moleHideDuration = new int[markerNum] ;
+  startTime = new long[markerNum];
+  gameState.score = 0;
+  gameStartTime = System.currentTimeMillis();
+  for(int i=0;i<markerNum;i++){
+    startTime[i] = System.currentTimeMillis();
+    moleAppearDuration[i] = gameState.randAppearDuration();
+    moleHideDuration[i] = gameState.randHideDuration();
+    gameState.molePopDown(i);
+  }
 }
 

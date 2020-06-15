@@ -229,6 +229,9 @@ void draw() {
       calibration_boolean = true;
       MARKER_TRACKER_DEBUG = false;
       //init game state
+      moleAppearDuration = new int[markers.size()] ;
+      moleHideDuration = new int[markers.size()] ;
+      startTime = new long[markers.size()];
       initGame(markers.size());
       
     }
@@ -374,9 +377,6 @@ void captureEvent(Capture c) {
 
 void initGame(int markerNum){
   //init game state
-  moleAppearDuration = new int[markerNum] ;
-  moleHideDuration = new int[markerNum] ;
-  startTime = new long[markerNum];
   gameState.score = 0;
   gameStartTime = System.currentTimeMillis();
   for(int i=0;i<markerNum;i++){

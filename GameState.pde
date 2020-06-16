@@ -263,6 +263,7 @@ class GameState {
         moleSize = 0;
         break;
     }
+    if(moleSize<0) moleSize = 0;
     return moleSize;
   }
 }

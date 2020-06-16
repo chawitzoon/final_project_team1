@@ -51,7 +51,7 @@ void keyPressed() {
 
 void keyReleased() {
   if (key == TAB) {
-    // odified global variable from GameState
+    // modified global variable from GameState
     moleHitDebug = false;
   }
   keyState.putState(keyCode, false);

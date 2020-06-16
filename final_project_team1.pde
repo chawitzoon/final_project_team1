@@ -10,8 +10,6 @@ Picker picker;
 // final boolean MARKER_TRACKER_DEBUG = false;
 boolean MARKER_TRACKER_DEBUG = true;
 
-final boolean BALL_DEBUG = false;
-
 final boolean USE_SAMPLE_IMAGE = false;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
@@ -20,7 +18,6 @@ final boolean USE_SAMPLE_IMAGE = false;
 final boolean USE_DIRECTSHOW = false;
 
 
-// final double kMarkerSize = 0.036; // [m]
 final double kMarkerSize = 0.024; // [m]
 
 Capture cap;
@@ -31,28 +28,13 @@ OpenCV opencv;
 // **************************************************************
 float fov = 45; // for camera capture
 
-// Marker codes to draw snowmans example
-// final int[] ExistenceList = {0x1228, 0x0690};
-// int towards = 0x1228; // the target marker that the ball flies towards
-int towardscnt = 0;   // if ball reached, +1 to change the target
-
-int[] ExistenceList;
-int[] ExistenceState;
-int towards = 0x005A; //for throwing ball example
 boolean calibration_boolean = false;
 
-final float GA = 9.80665;
-
 PVector snowmanLookVector;
-PVector ballPos;
-float ballAngle = 45;
-float ballspeed = 0;
 
 final int ballTotalFrame = 10;
 final float snowmanSize = 0.020;
 int frameCnt = 0;
-
-// HashMap<Integer, PMatrix3D> markerPoseMap;
 
 MarkerTracker markerTracker;
 PImage img;
@@ -126,7 +108,7 @@ void setupButton(){
 
 void settings() {
   if (USE_SAMPLE_IMAGE) {
-    // Here we introduced a new test image in Lecture 6 (20/05/27)
+
     size(1280, 720, P3D);
     opencv = new OpenCV(this, "./marker_test2.jpg");
     // size(1000, 730, P3D);
@@ -161,20 +143,15 @@ void setup() {
 
   img = createImage(opencv.width, opencv.height, RGB);
 
-  // picker = new Picker(this);
-
   // draw circle button as start button
   setupButton();
 
   // Align the camera coordinate system with the world coordinate system
-  // (cf. drawSnowman.pde)
+  // (cf. drawPrimitive.pde)
   PMatrix3D cameraMat = ((PGraphicsOpenGL)g).camera;
   cameraMat.reset();
 
   keyState = new KeyState();
-
-  ballPos = new PVector();  // ball position
-  // markerPoseMap = new HashMap<Integer, PMatrix3D>();  // hashmap (code, pose)
 
   calibration_boolean = false;
 }
@@ -213,7 +190,7 @@ void draw() {
     } else {
       fill(circleColor);
     }
-    // TODO can someone help to make an ellipse appear to indicate button presence
+    //TODO can someone help to make an ellipse appear to indicate button presence
     strokeWeight(3);
     stroke(255, 255, 255);
     ellipse(circleX, circleY, circleSize, circleSize);
@@ -222,8 +199,8 @@ void draw() {
 
     println("Number of Markers detected in this calibration:" + markers.size());
 
-    // if(mousePressed == true && circleOver){
-    if (key == ENTER && markers.size() > 0) {
+    if(mousePressed == true && circleOver){
+    // if (key == ENTER && markers.size() > 0) {
       gameState = new GameState(markers);
       println("finish calibration");
       calibration_boolean = true;
@@ -253,7 +230,7 @@ void draw() {
     perspective(radians(fov), float(width)/float(height), 0.01, 1000.0);
 
     // setup light
-    // (cf. drawSnowman.pde)
+    // (cf. drawPrimitive.pde)
     ambientLight(180, 180, 180);
     directionalLight(180, 150, 120, 0, 1, 0);
     lights();
@@ -263,10 +240,6 @@ void draw() {
 
     gameState.drawGame();
 
-    
-    // TODO @Daphne modifed from here to generate a function to call molePopUp
-    
-
     //restart game
     if(mousePressed == true){
       initGame(markers.size());
@@ -275,6 +248,7 @@ void draw() {
     //time up for the game
     if(gameState.timeup(System.currentTimeMillis() - gameStartTime , gameState.gameDuration*1000)){
       println("end game");
+
     }
     else{//game running
       long timer = System.currentTimeMillis();
@@ -314,20 +288,7 @@ void draw() {
       }
     }
 
-    /*if (key != TAB || key != ENTER){
-      moleKeyDebug = int(key) % gameState.getNumberofHole();
-      gameState.molePopUp(moleKeyDebug);
-    }*/
-
     gameState.updateMoleExistence();
-    // int id = picker.get(mouseX, mouseY);
-    // println(id);
-    // if(contains(ExistenceList, id)){
-    //   println("mouse over hole " + id);
-    // }
-  
-    // Your Code for Homework 6 (20/06/03) - End
-    // **********************************************
 
     noLights();
     keyState.getKeyEvent();
@@ -337,12 +298,11 @@ void draw() {
 }
 
 void update(int x, int y) {
-  if ( overCircle(circleX, circleY, circleSize) ) {
+  if (overCircle(circleX, circleY, circleSize) ) {
     circleOver = true;
   } else {
     circleOver = false;
   }
-  // println(circleOver);
 }
 
 boolean overCircle(int x, int y, int diameter) {

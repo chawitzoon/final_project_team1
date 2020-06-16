@@ -256,6 +256,7 @@ class GameState {
         moleSize = -0.00005*frame*frame+0.002*frame;
         break;
       case 2:
+        frame += 20;
         moleSize = -0.00005*frame*frame+0.002*frame;
         break;
       default:

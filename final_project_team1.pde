@@ -12,7 +12,7 @@ boolean MARKER_TRACKER_DEBUG = true;
 
 final boolean BALL_DEBUG = false;
 
-final boolean USE_SAMPLE_IMAGE = true;
+final boolean USE_SAMPLE_IMAGE = false;
 
 // We've found that some Windows build-in cameras (e.g. Microsoft Surface)
 // cannot work with processing.video.Capture.*.

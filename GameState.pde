@@ -116,7 +116,7 @@ class GameState {
     }
   }
 
-  void molePopUp(int moleIndex){
+  void molePopUp(int moleIndex, long passTime){
     // PMatrix3D pose_this = markerPoseMap.get(ExistenceList[moleIndex]);
     // PMatrix3D pose_look = markerPoseMap.get(ExistenceList[(moleIndex+1)%2]);
     PMatrix3D pose_this = markerPoseMap.get(holeExistence[moleIndex]);
@@ -138,9 +138,9 @@ class GameState {
             angle -= 40;
             rotateZ(angle);
             // println("mole hit : "+moleHitDebug);
-            drawMole(snowmanSize,1);
+            drawMole(calcMoleSize(moleIndex, passTime),1);
         } else {
-            drawMole(snowmanSize,0);
+            drawMole(calcMoleSize(moleIndex, passTime),0);
         }
 
         noFill();
@@ -242,6 +242,29 @@ class GameState {
 
   int randHideDuration(){
       return rand.nextInt(3000)+2000;
+  }
+
+  float calcMoleSize(int moleIndex, long passTime){
+    float moleSize = 0;
+    int frame = int(passTime/(moleAppearDuration[moleIndex]/40));
+
+    switch(getMoleState(moleIndex)){
+      case 0:
+        moleSize = -0.00005*frame*frame+0.002*frame;
+        break;
+      case 1:
+        moleSize = -0.00005*frame*frame+0.002*frame;
+        break;
+      case 2:
+        frame += 20;
+        moleSize = -0.00005*frame*frame+0.002*frame;
+        break;
+      default:
+        moleSize = 0;
+        break;
+    }
+    if(moleSize<0) moleSize = 0;
+    return moleSize;
   }
 }
 

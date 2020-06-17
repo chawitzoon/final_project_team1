@@ -59,6 +59,7 @@ boolean spressed = false;
 // Circle button setup to start the game
 // from https://processing.org/examples/button.html
 int circleX, circleY;  // Position of circle button
+int displayCircleX, displayCircleY;  // Position of circle button
 int circleSize = 93;   // Diameter of circle
 color circleColor, baseColor;
 color circleHighlight;
@@ -102,6 +103,8 @@ void setupButton(){
   currentColor = baseColor;
   circleX = opencv.width/2+circleSize/2;
   circleY = opencv.height/2;
+  displayCircleX = 0;
+  displayCircleY = 0;
   ellipseMode(CENTER);
 }
 
@@ -193,7 +196,7 @@ void draw() {
     //TODO can someone help to make an ellipse appear to indicate button presence
     strokeWeight(3);
     stroke(255, 255, 255);
-    ellipse(circleX, circleY, circleSize, circleSize);
+    ellipse(displayCircleX, displayCircleY, circleSize, circleSize);
 
     println("In calibration case");
 

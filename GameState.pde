@@ -142,7 +142,7 @@ class GameState {
         } else {
             drawMole(calcMoleSize(moleIndex, passTime),0);
         }
-
+        if (MARKER_TRACKER_DEBUG == true){
         noFill();
         strokeWeight(3);
         stroke(255, 0, 0);
@@ -151,6 +151,7 @@ class GameState {
         line(0, 0, 0, 0, 0.02, 0); // draw y-axis
         stroke(0, 0, 255);
         line(0, 0, 0, 0, 0, 0.02); // draw z-axis
+        }
       popMatrix();
     }
   }

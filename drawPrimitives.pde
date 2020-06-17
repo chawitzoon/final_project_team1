@@ -95,6 +95,7 @@ void drawWisker(float s,float l) {
 }
 
 void drawMole(float s, int state) {
+  if (MARKER_TRACKER_DEBUG == true){
     pushMatrix();
       translate(0, 0, -s/2);
       noFill();
@@ -102,6 +103,7 @@ void drawMole(float s, int state) {
       stroke(0,255,255);
       box(s);
     popMatrix();
+  }
 
     // body
     pushMatrix();
